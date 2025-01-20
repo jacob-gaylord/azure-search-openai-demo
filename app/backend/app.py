@@ -423,7 +423,6 @@ async def submit_feedback(auth_claims: Dict[str, Any]):
             
         # Add user info from auth claims
         feedback_data["userId"] = auth_claims.get("oid", "anonymous")
-        feedback_data["submissionDate"] = time.strftime('%Y-%m-%dT%H:%M:%S.%fZ', time.gmtime())
         
         # Log feedback submission with flattened custom dimensions
         current_app.logger.info(
@@ -433,8 +432,7 @@ async def submit_feedback(auth_claims: Dict[str, Any]):
                 "question": str(feedback_data["question"]),
                 "answer": str(feedback_data["answer"]),
                 "userId": str(feedback_data["userId"]),
-                "feedbackMessage": str(feedback_data.get("feedbackMessage", "")),
-                "submissionDate": str(feedback_data["submissionDate"])
+                "feedbackMessage": str(feedback_data.get("feedbackMessage", ""))
             }
         )
         

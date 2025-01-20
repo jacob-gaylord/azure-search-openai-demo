@@ -137,5 +137,4 @@ export interface FeedbackTelemetry {
     question: string;
     answer: string;
     userId: string;
-    submissionDate: Date;
 }

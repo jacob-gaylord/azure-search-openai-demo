@@ -363,8 +363,7 @@ const Chat = () => {
                 feedbackMessage: message,
                 question: lastQuestionRef.current,
                 answer: answer.message.content,
-                userId: authClaims.oid || "anonymous",
-                submissionDate: new Date()
+                userId: authClaims.oid || "anonymous"
             };
             await submitFeedbackApi(feedbackData, token);
         } catch (error) {
