@@ -425,18 +425,16 @@ async def submit_feedback(auth_claims: Dict[str, Any]):
         feedback_data["userId"] = auth_claims.get("oid", "anonymous")
         feedback_data["submissionDate"] = time.strftime('%Y-%m-%dT%H:%M:%S.%fZ', time.gmtime())
         
-        # Log feedback submission with custom dimensions
+        # Log feedback submission with flattened custom dimensions
         current_app.logger.info(
             "Feedback submitted",
             extra={
-                "custom_dimensions": {
-                    "feedbackType": feedback_data["feedbackType"],
-                    "question": feedback_data["question"],
-                    "answer": feedback_data["answer"],
-                    "userId": feedback_data["userId"],
-                    "feedbackMessage": feedback_data.get("feedbackMessage", ""),
-                    "submissionDate": feedback_data["submissionDate"]
-                }
+                "feedbackType": str(feedback_data["feedbackType"]),
+                "question": str(feedback_data["question"]),
+                "answer": str(feedback_data["answer"]),
+                "userId": str(feedback_data["userId"]),
+                "feedbackMessage": str(feedback_data.get("feedbackMessage", "")),
+                "submissionDate": str(feedback_data["submissionDate"])
             }
         )
         
@@ -446,11 +444,9 @@ async def submit_feedback(auth_claims: Dict[str, Any]):
         current_app.logger.error(
             f"Error submitting feedback: {str(e)}",
             extra={
-                "custom_dimensions": {
-                    "error": str(e),
-                    "feedbackType": feedback_data.get("feedbackType", ""),
-                    "userId": feedback_data.get("userId", "anonymous")
-                }
+                "error": str(e),
+                "feedbackType": str(feedback_data.get("feedbackType", "")),
+                "userId": str(feedback_data.get("userId", "anonymous"))
             }
         )
         return jsonify({"error": "internal server error"}), 500
