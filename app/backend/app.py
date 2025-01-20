@@ -417,7 +417,7 @@ async def submit_feedback(auth_claims: Dict[str, Any]):
         feedback_data = await request.get_json()
         
         # Validate required fields
-        required_fields = ["feedbackType", "conversationId", "sessionId"]
+        required_fields = ["feedbackType", "question", "answer"]
         if not all(field in feedback_data for field in required_fields):
             return jsonify({"error": "missing required fields"}), 400
             
@@ -433,8 +433,8 @@ async def submit_feedback(auth_claims: Dict[str, Any]):
             extra={
                 "custom_dimensions": {
                     "feedbackType": feedback_data["feedbackType"],
-                    "conversationId": feedback_data["conversationId"],
-                    "sessionId": feedback_data["sessionId"],
+                    "question": feedback_data["question"],
+                    "answer": feedback_data["answer"],
                     "userId": feedback_data["userId"],
                     "feedbackMessage": feedback_data.get("feedbackMessage", ""),
                     "submissionDate": feedback_data["submissionDate"]
