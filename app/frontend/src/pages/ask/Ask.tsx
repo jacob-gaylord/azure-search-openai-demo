@@ -251,18 +251,21 @@ export function Component(): JSX.Element {
 
     const { t, i18n } = useTranslation();
 
-    const handleFeedback = async (feedback: Feedback, message?: string) => {
+    const handleFeedback = async (feedback: Feedback, message?: string, answer?: ChatAppResponse) => {
         if (!answer) return;
 
         try {
             const token = client ? await getToken(client) : undefined;
+            const authClaims = answer.context?.auth_claims || {};
+
             const feedbackData: FeedbackTelemetry = {
                 feedbackType: feedback,
                 feedbackMessage: message,
-                conversationId: answer.session_state?.id || "default",
-                sessionId: answer.session_state?.session_id || "default",
-                submissionDate: new Date(),
-                userId: "default"
+                chatSessionId: window.sessionStorage.getItem("chatSessionId") || "default",
+                question: lastQuestionRef.current,
+                answer: answer.message.content,
+                userId: authClaims.oid || "anonymous",
+                submissionDate: new Date()
             };
             await submitFeedbackApi(feedbackData, token);
         } catch (error) {
