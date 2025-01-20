@@ -255,7 +255,7 @@ export function Component(): JSX.Element {
         if (!answer) return;
 
         try {
-            const token = await getToken();
+            const token = client ? await getToken(client) : undefined;
             const feedbackData: FeedbackTelemetry = {
                 feedbackType: feedback,
                 feedbackMessage: message,
