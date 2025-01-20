@@ -54,6 +54,7 @@ export type ResponseContext = {
     data_points: string[];
     followup_questions: string[] | null;
     thoughts: Thoughts[];
+    auth_claims?: { [key: string]: any };
 };
 
 export type ChatAppResponseOrError = {
@@ -133,8 +134,9 @@ export const enum Feedback {
 export interface FeedbackTelemetry {
     feedbackType: Feedback;
     feedbackMessage?: string;
-    submissionDate: Date;
-    conversationId: string;
-    sessionId: string;
+    chatSessionId: string;
+    question: string;
+    answer: string;
     userId: string;
+    submissionDate: Date;
 }

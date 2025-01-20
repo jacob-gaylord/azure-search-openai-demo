@@ -423,10 +423,24 @@ async def submit_feedback(auth_claims: Dict[str, Any]):
             
         # Add user info from auth claims
         feedback_data["userId"] = auth_claims.get("oid", "anonymous")
-        feedback_data["submissionDate"] = time.time()
         
-        # The feedback data will be automatically tracked by Application Insights
-        # through the existing OpenTelemetryMiddleware
+        # Format timestamp in ISO format for better compatibility with App Insights
+        feedback_data["submissionDate"] = time.strftime('%Y-%m-%dT%H:%M:%S.%fZ', time.gmtime())
+        
+        # Explicitly log the feedback event
+        current_app.logger.info(
+            "Feedback submitted",
+            extra={
+                "custom_dimensions": {
+                    "feedbackType": feedback_data["feedbackType"],
+                    "conversationId": feedback_data["conversationId"],
+                    "sessionId": feedback_data["sessionId"],
+                    "userId": feedback_data["userId"],
+                    "feedbackMessage": feedback_data.get("feedbackMessage", ""),
+                    "submissionDate": feedback_data["submissionDate"]
+                }
+            }
+        )
         
         return jsonify({"message": "Feedback submitted successfully"}), 200
     except Exception as error:
