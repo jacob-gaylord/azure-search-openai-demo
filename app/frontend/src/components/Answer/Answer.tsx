@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Stack, IconButton, Dialog, DialogType, TextField } from "@fluentui/react";
+import { Stack, IconButton, Dialog, DialogType, TextField, PrimaryButton, DefaultButton } from "@fluentui/react";
 import { useTranslation } from "react-i18next";
 import DOMPurify from "dompurify";
 import ReactMarkdown from "react-markdown";
@@ -194,19 +194,17 @@ export const Answer = ({
                     value={feedbackMessage}
                     onChange={(_, newValue) => setFeedbackMessage(newValue || "")}
                     placeholder={t("feedback.placeholder")}
+                    className={styles.feedbackTextField}
                 />
-                <Stack horizontal tokens={{ childrenGap: 10 }} style={{ marginTop: 20 }}>
-                    <IconButton
-                        primary
-                        text={t("feedback.submit")}
+                <div className={styles.feedbackButtonsContainer}>
+                    <PrimaryButton
+                        text={t("feedback.submitButton")}
                         onClick={handleFeedbackSubmit}
                         disabled={!feedbackMessage.trim()}
+                        className={styles.feedbackButton}
                     />
-                    <IconButton
-                        text={t("feedback.cancel")}
-                        onClick={() => setIsFeedbackDialogOpen(false)}
-                    />
-                </Stack>
+                    <DefaultButton text={t("feedback.cancelButton")} onClick={() => setIsFeedbackDialogOpen(false)} className={styles.feedbackButton} />
+                </div>
             </Dialog>
         </Stack>
     );
