@@ -141,3 +141,17 @@ sup {
     content: "";
     animation: loading 1s infinite;
 }
+
+.feedbackButton {
+    margin-left: 0.5em;
+    transition: color 0.1s ease-in-out;
+}
+
+.feedbackButton:hover {
+    opacity: 0.9;
+}
+
+.feedbackDialog {
+    min-width: 20em;
+    max-width: 40em;
+}

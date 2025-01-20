@@ -63,7 +63,10 @@
         "info": "Info",
         "save": "Save",
         "copy": "Copy",
-        "copied": "Copied!"
+        "copied": "Copied!",
+        "like": "Like this response",
+        "dislike": "Dislike this response",
+        "submitFeedback": "Submit feedback"
     },
 
     "headerTexts":{
@@ -152,5 +155,14 @@
         "streamChat": "Continuously streams the response to the chat UI as it is generated.",
         "useOidSecurityFilter": "Filter search results based on the authenticated user's OID.",
         "useGroupsSecurityFilter": "Filter search results based on the authenticated user's groups."
+    },
+
+    "feedback": {
+        "title": "Provide Feedback",
+        "message": "Please tell us why this response wasn't helpful",
+        "submitButton": "Submit",
+        "cancelButton": "Cancel",
+        "success": "Thank you for your feedback",
+        "error": "There was an error submitting your feedback. Please try again."
     }
 }

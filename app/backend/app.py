@@ -407,6 +407,32 @@ async def list_uploaded(auth_claims: dict[str, Any]):
     return jsonify(files), 200
 
 
+@bp.route("/feedback", methods=["POST"])
+@authenticated
+async def submit_feedback(auth_claims: Dict[str, Any]):
+    if not request.is_json:
+        return jsonify({"error": "request must be json"}), 415
+    
+    try:
+        feedback_data = await request.get_json()
+        
+        # Validate required fields
+        required_fields = ["feedbackType", "conversationId", "sessionId"]
+        if not all(field in feedback_data for field in required_fields):
+            return jsonify({"error": "missing required fields"}), 400
+            
+        # Add user info from auth claims
+        feedback_data["userId"] = auth_claims.get("oid", "anonymous")
+        feedback_data["submissionDate"] = time.time()
+        
+        # The feedback data will be automatically tracked by Application Insights
+        # through the existing OpenTelemetryMiddleware
+        
+        return jsonify({"message": "Feedback submitted successfully"}), 200
+    except Exception as error:
+        return error_response(error, "/feedback")
+
+
 @bp.before_app_serving
 async def setup_clients():
     # Replace these with your own values, either in environment variables or directly here

@@ -123,3 +123,18 @@ export type HistroyApiResponse = {
     answers: any;
     timestamp: number;
 };
+
+export const enum Feedback {
+    Positive = "Positive",
+    Negative = "Negative",
+    Neutral = "Neutral"
+}
+
+export interface FeedbackTelemetry {
+    feedbackType: Feedback;
+    feedbackMessage?: string;
+    submissionDate: Date;
+    conversationId: string;
+    sessionId: string;
+    userId: string;
+}
