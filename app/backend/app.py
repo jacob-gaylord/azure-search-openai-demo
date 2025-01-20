@@ -423,28 +423,37 @@ async def submit_feedback(auth_claims: Dict[str, Any]):
             
         # Add user info from auth claims
         feedback_data["userId"] = auth_claims.get("oid", "anonymous")
-        
-        # Format timestamp in ISO format for better compatibility with App Insights
         feedback_data["submissionDate"] = time.strftime('%Y-%m-%dT%H:%M:%S.%fZ', time.gmtime())
         
-        # Explicitly log the feedback event
+        # Create custom dimensions for Application Insights
+        custom_dimensions = {
+            "feedbackType": str(feedback_data["feedbackType"]),
+            "question": str(feedback_data["question"]),
+            "answer": str(feedback_data["answer"]),
+            "userId": str(feedback_data["userId"]),
+            "feedbackMessage": str(feedback_data.get("feedbackMessage", "")),
+            "submissionDate": str(feedback_data["submissionDate"])
+        }
+        
+        # Log as a custom event for Application Insights
         current_app.logger.info(
             "Feedback submitted",
             extra={
-                "custom_dimensions": {
-                    "feedbackType": feedback_data["feedbackType"],
-                    "question": feedback_data["question"],
-                    "answer": feedback_data["answer"],
-                    "userId": feedback_data["userId"],
-                    "feedbackMessage": feedback_data.get("feedbackMessage", ""),
-                    "submissionDate": feedback_data["submissionDate"]
+                "custom_dimensions": custom_dimensions,
+                "event_type": "Feedback",
+                "properties": custom_dimensions,
+                "measurements": {
+                    "questionLength": len(feedback_data["question"]),
+                    "answerLength": len(feedback_data["answer"])
                 }
             }
         )
         
         return jsonify({"message": "Feedback submitted successfully"}), 200
-    except Exception as error:
-        return error_response(error, "/feedback")
+    except Exception as e:
+        current_app.logger.error(f"Error submitting feedback: {str(e)}", 
+            extra={"custom_dimensions": {"error": str(e)}})
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @bp.before_app_serving
