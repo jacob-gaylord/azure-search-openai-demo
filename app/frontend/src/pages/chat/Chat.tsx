@@ -361,7 +361,6 @@ const Chat = () => {
             const feedbackData: FeedbackTelemetry = {
                 feedbackType: feedback,
                 feedbackMessage: message,
-                chatSessionId: window.sessionStorage.getItem("chatSessionId") || "default",
                 question: lastQuestionRef.current,
                 answer: answer.message.content,
                 userId: authClaims.oid || "anonymous",

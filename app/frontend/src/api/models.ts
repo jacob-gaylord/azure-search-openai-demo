@@ -134,7 +134,6 @@ export const enum Feedback {
 export interface FeedbackTelemetry {
     feedbackType: Feedback;
     feedbackMessage?: string;
-    chatSessionId: string;
     question: string;
     answer: string;
     userId: string;
