@@ -141,3 +141,53 @@ sup {
     content: "";
     animation: loading 1s infinite;
 }
+
+.feedbackButton {
+    margin-left: 0.5em;
+    transition: color 0.1s ease-in-out;
+}
+
+.feedbackButton:hover {
+    opacity: 0.9;
+}
+
+.feedbackDialog {
+    min-width: 20em;
+    max-width: 40em;
+}
+
+.feedbackDialogSubtext {
+    font-size: 14px;
+    margin-bottom: 16px;
+    color: #323130;
+}
+
+.feedbackTextField {
+    margin-bottom: 20px;
+}
+
+.feedbackTextField textarea {
+    border: 1px solid #8a8886;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.feedbackTextField textarea:focus {
+    border-color: #0078d4;
+    outline: none;
+}
+
+.feedbackButtonsContainer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #edebe9;
+}
+
+.feedbackButton {
+    min-width: 80px;
+}

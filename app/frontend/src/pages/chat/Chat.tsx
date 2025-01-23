@@ -17,7 +17,10 @@ import {
     ResponseMessage,
     VectorFieldOptions,
     GPT4VInput,
-    SpeechConfig
+    SpeechConfig,
+    Feedback,
+    FeedbackTelemetry,
+    submitFeedbackApi
 } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -348,6 +351,26 @@ const Chat = () => {
 
     const { t, i18n } = useTranslation();
 
+    const handleFeedback = async (feedback: Feedback, message?: string, answer?: ChatAppResponse) => {
+        if (!answer) return;
+
+        try {
+            const token = client ? await getToken(client) : undefined;
+            const authClaims = answer.context?.auth_claims || {};
+
+            const feedbackData: FeedbackTelemetry = {
+                feedbackType: feedback,
+                feedbackMessage: message,
+                question: lastQuestionRef.current,
+                answer: answer.message.content,
+                userId: authClaims.oid || "anonymous"
+            };
+            await submitFeedbackApi(feedbackData, token);
+        } catch (error) {
+            console.error("Failed to submit feedback:", error);
+        }
+    };
+
     return (
         <div className={styles.container}>
             {/* Setting the page title using react-helmet-async */}
@@ -398,6 +421,7 @@ const Chat = () => {
                                                 showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
                                                 showSpeechOutputAzure={showSpeechOutputAzure}
                                                 showSpeechOutputBrowser={showSpeechOutputBrowser}
+                                                onFeedbackProvided={(feedback, message) => handleFeedback(feedback, message, streamedAnswer[1])}
                                             />
                                         </div>
                                     </div>
@@ -421,6 +445,7 @@ const Chat = () => {
                                                 showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
                                                 showSpeechOutputAzure={showSpeechOutputAzure}
                                                 showSpeechOutputBrowser={showSpeechOutputBrowser}
+                                                onFeedbackProvided={(feedback, message) => handleFeedback(feedback, message, answer[1])}
                                             />
                                         </div>
                                     </div>

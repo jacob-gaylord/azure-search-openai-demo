@@ -1,6 +1,6 @@
 const BACKEND_URI = "";
 
-import { ChatAppResponse, ChatAppResponseOrError, ChatAppRequest, Config, SimpleAPIResponse, HistoryListApiResponse, HistroyApiResponse } from "./models";
+import { ChatAppResponse, ChatAppResponseOrError, ChatAppRequest, Config, SimpleAPIResponse, HistoryListApiResponse, HistroyApiResponse, FeedbackTelemetry } from "./models";
 import { useLogin, getToken, isUsingAppServicesLogin } from "../authConfig";
 
 export async function getHeaders(idToken: string | undefined): Promise<Record<string, string>> {
@@ -186,5 +186,21 @@ export async function deleteChatHistoryApi(id: string, idToken: string): Promise
     }
 
     const dataResponse: any = await response.json();
+    return dataResponse;
+}
+
+export async function submitFeedbackApi(feedback: FeedbackTelemetry, idToken: string | undefined): Promise<SimpleAPIResponse> {
+    const headers = await getHeaders(idToken);
+    const response = await fetch(`${BACKEND_URI}/feedback`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify(feedback)
+    });
+
+    if (!response.ok) {
+        throw new Error(`Submitting feedback failed: ${response.statusText}`);
+    }
+
+    const dataResponse: SimpleAPIResponse = await response.json();
     return dataResponse;
 }

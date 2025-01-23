@@ -5,7 +5,19 @@ import { Panel, DefaultButton, Spinner } from "@fluentui/react";
 
 import styles from "./Ask.module.css";
 
-import { askApi, configApi, ChatAppResponse, ChatAppRequest, RetrievalMode, VectorFieldOptions, GPT4VInput, SpeechConfig } from "../../api";
+import {
+    askApi,
+    configApi,
+    ChatAppResponse,
+    ChatAppRequest,
+    RetrievalMode,
+    VectorFieldOptions,
+    GPT4VInput,
+    SpeechConfig,
+    Feedback,
+    FeedbackTelemetry,
+    submitFeedbackApi
+} from "../../api";
 import { Answer, AnswerError } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -239,6 +251,26 @@ export function Component(): JSX.Element {
 
     const { t, i18n } = useTranslation();
 
+    const handleFeedback = async (feedback: Feedback, message?: string, answer?: ChatAppResponse) => {
+        if (!answer) return;
+
+        try {
+            const token = client ? await getToken(client) : undefined;
+            const authClaims = answer.context?.auth_claims || {};
+
+            const feedbackData: FeedbackTelemetry = {
+                feedbackType: feedback,
+                feedbackMessage: message,
+                question: lastQuestionRef.current,
+                answer: answer.message.content,
+                userId: authClaims.oid || "anonymous"
+            };
+            await submitFeedbackApi(feedbackData, token);
+        } catch (error) {
+            console.error("Failed to submit feedback:", error);
+        }
+    };
+
     return (
         <div className={styles.askContainer}>
             {/* Setting the page title using react-helmet-async */}
@@ -281,6 +313,7 @@ export function Component(): JSX.Element {
                             onSupportingContentClicked={() => onToggleTab(AnalysisPanelTabs.SupportingContentTab)}
                             showSpeechOutputAzure={showSpeechOutputAzure}
                             showSpeechOutputBrowser={showSpeechOutputBrowser}
+                            onFeedbackProvided={handleFeedback}
                         />
                     </div>
                 )}

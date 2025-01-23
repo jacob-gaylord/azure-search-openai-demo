@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Stack, IconButton } from "@fluentui/react";
+import { Stack, IconButton, Dialog, DialogType, TextField, PrimaryButton, DefaultButton } from "@fluentui/react";
 import { useTranslation } from "react-i18next";
 import DOMPurify from "dompurify";
 import ReactMarkdown from "react-markdown";
@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
 import styles from "./Answer.module.css";
-import { ChatAppResponse, getCitationFilePath, SpeechConfig } from "../../api";
+import { ChatAppResponse, getCitationFilePath, SpeechConfig, Feedback } from "../../api";
 import { parseAnswerToHtml } from "./AnswerParser";
 import { AnswerIcon } from "./AnswerIcon";
 import { SpeechOutputBrowser } from "./SpeechOutputBrowser";
@@ -23,6 +23,7 @@ interface Props {
     onThoughtProcessClicked: () => void;
     onSupportingContentClicked: () => void;
     onFollowupQuestionClicked?: (question: string) => void;
+    onFeedbackProvided?: (feedback: Feedback, message?: string) => void;
     showFollowupQuestions?: boolean;
     showSpeechOutputBrowser?: boolean;
     showSpeechOutputAzure?: boolean;
@@ -38,6 +39,7 @@ export const Answer = ({
     onThoughtProcessClicked,
     onSupportingContentClicked,
     onFollowupQuestionClicked,
+    onFeedbackProvided,
     showFollowupQuestions,
     showSpeechOutputAzure,
     showSpeechOutputBrowser
@@ -47,6 +49,9 @@ export const Answer = ({
     const { t } = useTranslation();
     const sanitizedAnswerHtml = DOMPurify.sanitize(parsedAnswer.answerHtml);
     const [copied, setCopied] = useState(false);
+    const [feedbackState, setFeedbackState] = useState<Feedback>(Feedback.Neutral);
+    const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+    const [feedbackMessage, setFeedbackMessage] = useState("");
 
     const handleCopy = () => {
         // Single replace to remove all HTML tags to remove the citations
@@ -59,6 +64,27 @@ export const Answer = ({
                 setTimeout(() => setCopied(false), 2000);
             })
             .catch(err => console.error("Failed to copy text: ", err));
+    };
+
+    const handleFeedback = (feedback: Feedback) => {
+        if (!onFeedbackProvided) return;
+
+        if (feedback === Feedback.Negative) {
+            setFeedbackState(feedback);
+            setIsFeedbackDialogOpen(true);
+        } else {
+            const newState = feedbackState === feedback ? Feedback.Neutral : feedback;
+            setFeedbackState(newState);
+            onFeedbackProvided(newState);
+        }
+    };
+
+    const handleFeedbackSubmit = () => {
+        if (onFeedbackProvided) {
+            onFeedbackProvided(Feedback.Negative, feedbackMessage);
+        }
+        setIsFeedbackDialogOpen(false);
+        setFeedbackMessage("");
     };
 
     return (
@@ -94,6 +120,24 @@ export const Answer = ({
                             <SpeechOutputAzure answer={sanitizedAnswerHtml} index={index} speechConfig={speechConfig} isStreaming={isStreaming} />
                         )}
                         {showSpeechOutputBrowser && <SpeechOutputBrowser answer={sanitizedAnswerHtml} />}
+                        {onFeedbackProvided && (
+                            <>
+                                <IconButton
+                                    style={{ color: feedbackState === Feedback.Positive ? "darkgreen" : "black" }}
+                                    iconProps={{ iconName: "Like" }}
+                                    title={t("tooltips.like")}
+                                    ariaLabel={t("tooltips.like")}
+                                    onClick={() => handleFeedback(Feedback.Positive)}
+                                />
+                                <IconButton
+                                    style={{ color: feedbackState === Feedback.Negative ? "darkred" : "black" }}
+                                    iconProps={{ iconName: "Dislike" }}
+                                    title={t("tooltips.dislike")}
+                                    ariaLabel={t("tooltips.dislike")}
+                                    onClick={() => handleFeedback(Feedback.Negative)}
+                                />
+                            </>
+                        )}
                     </div>
                 </Stack>
             </Stack.Item>
@@ -134,6 +178,34 @@ export const Answer = ({
                     </Stack>
                 </Stack.Item>
             )}
+
+            <Dialog
+                hidden={!isFeedbackDialogOpen}
+                onDismiss={() => setIsFeedbackDialogOpen(false)}
+                dialogContentProps={{
+                    type: DialogType.normal,
+                    title: t("feedback.title"),
+                    subText: t("feedback.message")
+                }}
+            >
+                <TextField
+                    multiline
+                    rows={3}
+                    value={feedbackMessage}
+                    onChange={(_, newValue) => setFeedbackMessage(newValue || "")}
+                    placeholder={t("feedback.placeholder")}
+                    className={styles.feedbackTextField}
+                />
+                <div className={styles.feedbackButtonsContainer}>
+                    <PrimaryButton
+                        text={t("feedback.submitButton")}
+                        onClick={handleFeedbackSubmit}
+                        disabled={!feedbackMessage.trim()}
+                        className={styles.feedbackButton}
+                    />
+                    <DefaultButton text={t("feedback.cancelButton")} onClick={() => setIsFeedbackDialogOpen(false)} className={styles.feedbackButton} />
+                </div>
+            </Dialog>
         </Stack>
     );
 };

@@ -54,6 +54,7 @@ export type ResponseContext = {
     data_points: string[];
     followup_questions: string[] | null;
     thoughts: Thoughts[];
+    auth_claims?: { [key: string]: any };
 };
 
 export type ChatAppResponseOrError = {
@@ -123,3 +124,17 @@ export type HistroyApiResponse = {
     answers: any;
     timestamp: number;
 };
+
+export const enum Feedback {
+    Positive = "Positive",
+    Negative = "Negative",
+    Neutral = "Neutral"
+}
+
+export interface FeedbackTelemetry {
+    feedbackType: Feedback;
+    feedbackMessage?: string;
+    question: string;
+    answer: string;
+    userId: string;
+}

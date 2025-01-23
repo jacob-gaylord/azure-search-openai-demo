@@ -51,6 +51,7 @@ from quart_cors import cors
 from approaches.approach import Approach
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from approaches.chatreadretrievereadvision import ChatReadRetrieveReadVisionApproach
+from approaches.promptmanager import PromptyManager
 from approaches.retrievethenread import RetrieveThenReadApproach
 from approaches.retrievethenreadvision import RetrieveThenReadVisionApproach
 from chat_history.cosmosdb import chat_history_cosmosdb_bp
@@ -406,6 +407,49 @@ async def list_uploaded(auth_claims: dict[str, Any]):
     return jsonify(files), 200
 
 
+@bp.route("/feedback", methods=["POST"])
+@authenticated
+async def submit_feedback(auth_claims: Dict[str, Any]):
+    if not request.is_json:
+        return jsonify({"error": "request must be json"}), 415
+    
+    try:
+        feedback_data = await request.get_json()
+        
+        # Validate required fields
+        required_fields = ["feedbackType", "question", "answer"]
+        if not all(field in feedback_data for field in required_fields):
+            return jsonify({"error": "missing required fields"}), 400
+            
+        # Add user info from auth claims
+        feedback_data["userId"] = auth_claims.get("oid", "anonymous")
+        
+        # Log feedback submission with flattened custom dimensions
+        current_app.logger.info(
+            "Feedback submitted",
+            extra={
+                "feedbackType": str(feedback_data["feedbackType"]),
+                "question": str(feedback_data["question"]),
+                "answer": str(feedback_data["answer"]),
+                "userId": str(feedback_data["userId"]),
+                "feedbackMessage": str(feedback_data.get("feedbackMessage", ""))
+            }
+        )
+        
+        return jsonify({"message": "feedback submitted successfully"}), 200
+        
+    except Exception as e:
+        current_app.logger.error(
+            f"Error submitting feedback: {str(e)}",
+            extra={
+                "error": str(e),
+                "feedbackType": str(feedback_data.get("feedbackType", "")),
+                "userId": str(feedback_data.get("userId", "anonymous"))
+            }
+        )
+        return jsonify({"error": "internal server error"}), 500
+
+
 @bp.before_app_serving
 async def setup_clients():
     # Replace these with your own values, either in environment variables or directly here
@@ -642,8 +686,10 @@ async def setup_clients():
     current_app.config[CONFIG_CHAT_HISTORY_BROWSER_ENABLED] = USE_CHAT_HISTORY_BROWSER
     current_app.config[CONFIG_CHAT_HISTORY_COSMOS_ENABLED] = USE_CHAT_HISTORY_COSMOS
 
-    # Various approaches to integrate GPT and external knowledge, most applications will use a single one of these patterns
-    # or some derivative, here we include several for exploration purposes
+    prompt_manager = PromptyManager()
+
+    # Set up the two default RAG approaches for /ask and /chat
+    # RetrieveThenReadApproach is used by /ask for single-turn Q&A
     current_app.config[CONFIG_ASK_APPROACH] = RetrieveThenReadApproach(
         search_client=search_client,
         openai_client=openai_client,
@@ -657,8 +703,10 @@ async def setup_clients():
         content_field=KB_FIELDS_CONTENT,
         query_language=AZURE_SEARCH_QUERY_LANGUAGE,
         query_speller=AZURE_SEARCH_QUERY_SPELLER,
+        prompt_manager=prompt_manager,
     )
 
+    # ChatReadRetrieveReadApproach is used by /chat for multi-turn conversation
     current_app.config[CONFIG_CHAT_APPROACH] = ChatReadRetrieveReadApproach(
         search_client=search_client,
         openai_client=openai_client,
@@ -672,6 +720,7 @@ async def setup_clients():
         content_field=KB_FIELDS_CONTENT,
         query_language=AZURE_SEARCH_QUERY_LANGUAGE,
         query_speller=AZURE_SEARCH_QUERY_SPELLER,
+        prompt_manager=prompt_manager,
     )
 
     if USE_GPT4V:
@@ -696,6 +745,7 @@ async def setup_clients():
             content_field=KB_FIELDS_CONTENT,
             query_language=AZURE_SEARCH_QUERY_LANGUAGE,
             query_speller=AZURE_SEARCH_QUERY_SPELLER,
+            prompt_manager=prompt_manager,
         )
 
         current_app.config[CONFIG_CHAT_VISION_APPROACH] = ChatReadRetrieveReadVisionApproach(
@@ -716,6 +766,7 @@ async def setup_clients():
             content_field=KB_FIELDS_CONTENT,
             query_language=AZURE_SEARCH_QUERY_LANGUAGE,
             query_speller=AZURE_SEARCH_QUERY_SPELLER,
+            prompt_manager=prompt_manager,
         )
 
 
